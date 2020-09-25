@@ -1,0 +1,11 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "pank2",
+    "version": "1.0.0",
+    "description": "Bank API",
+    "contact": {
+      "name": "Sepo-Martin Elb, Eleri Viks"
+    }
+  }
+}
