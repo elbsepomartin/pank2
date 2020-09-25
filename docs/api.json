@@ -7,5 +7,99 @@
     "contact": {
       "name": "Sepo-Martin Elb, Eleri Viks"
     }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": ""
+    }
+  ],
+  "paths": {
+    "/users": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/postUsersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "tags": [
+          "users"
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/postUsersResponse"
+                }
+              }
+            },
+            "description": "User successfully registered"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          }
+        },
+        "summary": "Registers a new user"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "postUsersRequest": {
+        "title": "Root Type for postUsersRequest",
+        "description": "",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the person registering their account",
+            "type": "string"
+          },
+          "username": {
+            "description": "User account username",
+            "type": "string"
+          },
+          "password": {
+            "description": "User account password",
+            "type": "string"
+          }
+        },
+        "example": {
+          "name": "Testija",
+          "username": "tester123",
+          "password": "test"
+        }
+      },
+      "errorResponse": {
+        "title": "Root Type for errorResponse",
+        "description": "Response body for all errors",
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "error": "Error description here"
+        }
+      },
+      "postUsersResponse": {
+        "title": "Root Type for postUsersResponse",
+        "description": "",
+        "type": "object"
+      }
+    }
   }
 }
