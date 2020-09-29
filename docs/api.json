@@ -55,6 +55,52 @@
         "summary": "Registers a new user"
       }
     },
+    "/users/account": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "name": "Token",
+            "description": "Session token generated to access data",
+            "schema": {
+              "type": "string"
+            },
+            "in": "header",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getUsersAccountResponse"
+                }
+              }
+            },
+            "description": "Successful data request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorResponse"
+                },
+                "examples": {
+                  "userAccountNotFound": {
+                    "value": "Account not found"
+                  }
+                }
+              }
+            },
+            "description": "Returns an error if the user account related to the session is not found"
+          }
+        },
+        "summary": "Displays the users bank account details"
+      }
+    },
     "/sessions": {
       "post": {
         "requestBody": {
@@ -67,6 +113,9 @@
           },
           "required": true
         },
+        "tags": [
+          "sessions"
+        ],
         "responses": {
           "200": {
             "content": {
@@ -82,7 +131,8 @@
                   }
                 }
               }
-            }
+            },
+            "description": "User logged in and provided a token"
           },
           "401": {
             "content": {
@@ -98,12 +148,27 @@
                   }
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           }
         },
         "summary": "Logs the user in"
       },
       "delete": {
+        "tags": [
+          "sessions"
+        ],
+        "parameters": [
+          {
+            "name": "Token",
+            "description": "",
+            "schema": {
+              "type": "string"
+            },
+            "in": "header",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -119,7 +184,8 @@
                   }
                 }
               }
-            }
+            },
+            "description": "Session deleted successfully"
           },
           "401": {
             "content": {
@@ -145,7 +211,23 @@
                   }
                 }
               }
-            }
+            },
+            "description": "No authorization"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorResponse"
+                },
+                "examples": {
+                  "unsuccessfulDelete": {
+                    "value": "{error: \"Unsuccessful\"}"
+                  }
+                }
+              }
+            },
+            "description": "Database issue"
           }
         },
         "summary": "Logs the user out"
@@ -245,6 +327,35 @@
         },
         "example": {
           "message": "Message description here"
+        }
+      },
+      "getUsersAccountResponse": {
+        "title": "Root Type for postUsersAccountResponse",
+        "description": "",
+        "type": "object",
+        "properties": {
+          "account": {
+            "description": "Users account details",
+            "type": "object",
+            "properties": {
+              "account_number": {
+                "type": "string"
+              },
+              "balance": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "example": {
+          "account": {
+            "account_number": "EE9084674985887495",
+            "balance": "50",
+            "user": "5f71c68199d0ee13b836adc5"
+          }
         }
       }
     }
