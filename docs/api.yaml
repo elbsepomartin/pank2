@@ -1,0 +1,234 @@
+openapi: 3.0.2
+info:
+  title: pank2
+  version: 1.0.0
+  description: Bank API
+  contact:
+    name: 'Sepo-Martin Elb, Eleri Viks'
+servers:
+  -
+    url: 'http://localhost:3000'
+    description: ''
+paths:
+  /users:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/postUsersRequest'
+        required: true
+      tags:
+        - users
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/postUsersResponse'
+          description: User successfully registered
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+          description: Bad request
+      summary: Registers a new user
+  /users/account:
+    get:
+      tags:
+        - users
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getUsersAccountResponse'
+          description: Successful data request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                userAccountNotFound:
+                  value: Account not found
+          description: Returns an error if the user account related to the session is not found
+      security:
+        -
+          Bearer: []
+      summary: Displays the users bank account details
+  /sessions:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/postSessionsRequest'
+        required: true
+      tags:
+        - sessions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/postSessionsResponse'
+              examples:
+                tokenExample:
+                  value:
+                    token: 5f6dd64f5b5498060c54126a
+          description: User logged in and provided a token
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                invalidUsernameOrPassword:
+                  value:
+                    error: Invalid username or password
+          description: Unauthorized
+      summary: Logs the user in
+    delete:
+      tags:
+        - sessions
+      parameters:
+        -
+          name: Token
+          description: ''
+          schema:
+            type: string
+          in: header
+          required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/successResponse'
+              examples:
+                tokenDeleted:
+                  value:
+                    message: Token successfully deleted
+          description: Session deleted successfully
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                missingToken:
+                  value:
+                    error: Missing token
+                invalidToken:
+                  value:
+                    error: Invalid token
+                unknownUser:
+                  value:
+                    error: Unknown user
+          description: No authorization
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                unsuccessfulDelete:
+                  value: '{error: "Unsuccessful"}'
+          description: Database issue
+      summary: Logs the user out
+components:
+  schemas:
+    postUsersRequest:
+      title: Root Type for postUsersRequest
+      description: ''
+      type: object
+      properties:
+        name:
+          description: The name of the person registering their account
+          type: string
+        username:
+          description: User account username
+          type: string
+        password:
+          description: User account password
+          type: string
+      example:
+        name: Testija
+        username: tester123
+        password: test
+    errorResponse:
+      title: Root Type for errorResponse
+      description: Response body for all errors
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: Error description here
+    postUsersResponse:
+      title: Root Type for postUsersResponse
+      description: ''
+      type: object
+    postSessionsRequest:
+      title: Root Type for postSessionsRequest
+      description: ''
+      type: object
+      properties:
+        name:
+          description: The name of the person trying to log in
+          type: string
+        username:
+          description: User account username
+          type: string
+        password:
+          description: User account password
+          type: string
+      example:
+        name: Testija
+        username: tester123
+        password: test
+    postSessionsResponse:
+      title: Root Type for postSessionsResponse
+      description: ''
+      type: object
+      properties:
+        token:
+          description: The token provided and used on login to handle a specific user
+          type: string
+      example:
+        token: 5f6dd23b8818b63b2811afb4
+    successResponse:
+      title: Root Type for successResponse
+      description: ''
+      type: object
+      properties:
+        message:
+          type: string
+      example:
+        message: Message description here
+    getUsersAccountResponse:
+      title: Root Type for postUsersAccountResponse
+      description: ''
+      type: object
+      properties:
+        account:
+          description: Users account details
+          type: object
+          properties:
+            account_number:
+              type: string
+            balance:
+              type: string
+            user:
+              type: string
+      example:
+        account:
+          account_number: EE9084674985887495
+          balance: '50'
+          user: 5f71c68199d0ee13b836adc5
+  securitySchemes:
+    Bearer:
+      scheme: bearer
+      type: http

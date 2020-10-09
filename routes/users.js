@@ -15,14 +15,27 @@ router.get('/account', validateToken, async (req, res) => {
         // Find a session with the provided Id
         const session = await Sessions.findOne({ _id:sessionId });
 
-        const userAccount = await Account.findOne({user: session.userId}).select({ "account_number": 1, "balance": 1, "user": 1, "_id": 0 });
+        const user = await User.findOne({_id: session.userId}).select({ "name": 1, "username": 1, "password": 1, "_id": 0 });
+
+        if (!user) {
+            res.status(404).json({error: "User not found"})
+        }
+
+        const userAccount = await Account.findOne({user: session.userId}).select({ "account_number": 1, "balance": 1, "currency": 1, "user": 1, "_id": 0 });
+
         if (!userAccount) {
             res.status(404).json({error: "Account not found"})
         }
 
         res.status(200).json({
-            account: userAccount
-        })
+            name: user.name,
+            username: user.username,
+            account: [{
+                account_number: userAccount.account_number,
+                balance: userAccount.balance,
+                currency: userAccount.currency
+            }]
+        });
 
     } catch (e) {
         res.statusCode = 500
@@ -46,7 +59,7 @@ router.post('/', async (req, res) => {
         const savedUser = await user.save();
         const savedAccount = await account.save();
         res.header('location', '/users/' + savedUser._id);
-        res.status(201).json();
+        res.status(201).json({ message: "User successfully created" });
     } catch (err) {
         res.status(400).json({error: [{msg: "Failed to create an user"}]});
     }

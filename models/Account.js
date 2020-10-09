@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 function generate(n) {
     var add = 1, max = 12 - add;
@@ -14,20 +15,27 @@ function generate(n) {
     return ("" + number).substring(add);
 }
 
-module.exports = mongoose.model('Account', new mongoose.Schema({
+const accountSchema = new mongoose.Schema({
 
     account_number: {
         type: String,
-        default: "EE" + generate(16)
+        default: process.env.BANK_PREFIX + generate(16)
     },
 
     balance: {
+        type: Number,
+        default: 10000
+    },
+
+    currency: {
         type: String,
-        default: 50
+        default: "EUR",
     },
 
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
-}));
+});
+
+module.exports = mongoose.model('Account', accountSchema);

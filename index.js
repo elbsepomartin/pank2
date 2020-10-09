@@ -2,7 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const {RequestHeadersHaveCorrectContentType, RequestBodyIsValidJson} = require('./middlewares');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./docs/api.json');
+const yaml = require('yamljs');
+const swaggerDocument = yaml.load('./docs/api.yaml');
 
 // Start Express
 const app = express();
@@ -21,7 +22,9 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const usersRoute = require('./routes/users');
 app.use('/users', usersRoute); //Removes the usage of /users in users.js
 const sessionsRoute = require('./routes/sessions');
-app.use('/sessions', sessionsRoute); //Removes the usage of /sessions in users.js
+app.use('/sessions', sessionsRoute); //Removes the usage of /sessions in sessions.js
+const transactionsRoute = require('./routes/transactions');
+app.use('/transactions', transactionsRoute); //Removes the usage of /transactions in transactions.js
 
 // Database connection
 mongoose.connect(process.env.DB_CONNECTION,
