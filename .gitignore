@@ -1,4 +1,4 @@
 /node_modules
 .env
 .idea
-./keys/private.key
+keys/private.key
