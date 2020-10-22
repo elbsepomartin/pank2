@@ -311,3 +311,4 @@ components:
     Bearer:
       scheme: bearer
       type: http
+
