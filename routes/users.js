@@ -3,15 +3,16 @@ const router = express.Router();
 const User = require('../models/User');
 const Account = require('../models/Account');
 const Sessions = require('../models/Session');
-const {validateToken} = require('../middlewares');
+const {verifyToken} = require('../middlewares');
 
 
 // Get account details
-router.get('/account', validateToken, async (req, res) => {
+router.get('/account', verifyToken, async (req, res) => {
     try {
 
         // Get a specific users session token
         const sessionId = req.headers.authorization.split(' ')[1]
+
         // Find a session with the provided Id
         const session = await Sessions.findOne({ _id:sessionId });
 
@@ -59,9 +60,9 @@ router.post('/', async (req, res) => {
         const savedUser = await user.save();
         const savedAccount = await account.save();
         res.header('location', '/users/' + savedUser._id);
-        res.status(201).json({ message: "User successfully created" });
+        res.status(201);
     } catch (err) {
-        res.status(400).json({error: [{msg: "Failed to create an user"}]});
+        res.status(400).json({error: err.message} );
     }
 });
 

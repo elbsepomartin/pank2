@@ -19,7 +19,7 @@ const accountSchema = new mongoose.Schema({
 
     account_number: {
         type: String,
-        default: process.env.BANK_PREFIX + generate(16)
+        default: process.env.BANK_PREFIX + generate(15)
     },
 
     balance: {
@@ -29,7 +29,9 @@ const accountSchema = new mongoose.Schema({
 
     currency: {
         type: String,
-        default: "EUR",
+        minlength: 3,
+        maxlength: 3,
+        default: "EUR"
     },
 
     user: {

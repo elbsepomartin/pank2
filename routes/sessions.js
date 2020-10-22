@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Users = require('../models/User');
 const Sessions = require('../models/Session');
-const { validateToken } = require('../middlewares');
+const { verifyToken } = require('../middlewares');
 
 // Create a session
 router.post(
@@ -31,7 +31,7 @@ router.post(
     })
 
 // Delete a session
-router.delete('/', validateToken, async (req, res) => {
+router.delete('/', verifyToken, async (req, res) => {
     try {
         // Removes a session by the header with the provided sessionId
         const removedSessions = await Sessions.deleteOne({ _id: req.headers.sessionId });

@@ -32,7 +32,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/errorResponse'
-          description: Bad request
+              examples:
+                passwordRequired:
+                  value:
+                    error: 'Users validation failed: password: Path `password` is required.'
+                usernameRequired:
+                  value:
+                    error: 'Users validation failed: username: Path `username` is required.'
+                nameRequired:
+                  value:
+                    error: 'Users validation failed: name: Path `name` is required.'
+                duplicateUsername:
+                  value:
+                    error: >-
+                      E11000 duplicate key error collection: database.users index:
+                      username_1 dup key: { username: "aaa" }
+          description: Returns the errors specified
       summary: Registers a new user
   /users/account:
     get:
@@ -52,8 +67,12 @@ paths:
                 $ref: '#/components/schemas/errorResponse'
               examples:
                 userAccountNotFound:
-                  value: Account not found
-          description: Returns an error if the user account related to the session is not found
+                  value:
+                    error: Account not found
+                invalidToken:
+                  value:
+                    error: Invalid token
+          description: Returns the errors specified
       security:
         -
           Bearer: []
@@ -78,7 +97,7 @@ paths:
                 tokenExample:
                   value:
                     token: 5f6dd64f5b5498060c54126a
-          description: User logged in and provided a token
+          description: User is logged in and provided a token
         '401':
           content:
             application/json:
@@ -88,19 +107,11 @@ paths:
                 invalidUsernameOrPassword:
                   value:
                     error: Invalid username or password
-          description: Unauthorized
+          description: Returns the errors specified
       summary: Logs the user in
     delete:
       tags:
         - sessions
-      parameters:
-        -
-          name: Token
-          description: ''
-          schema:
-            type: string
-          in: header
-          required: true
       responses:
         '200':
           content:
@@ -127,7 +138,7 @@ paths:
                 unknownUser:
                   value:
                     error: Unknown user
-          description: No authorization
+          description: Unauthorized
         '500':
           content:
             application/json:
@@ -135,9 +146,51 @@ paths:
                 $ref: '#/components/schemas/errorResponse'
               examples:
                 unsuccessfulDelete:
-                  value: '{error: "Unsuccessful"}'
-          description: Database issue
+                  value:
+                    error: Unsuccessful deletion
+          description: Server error
+      security:
+        -
+          Bearer: []
       summary: Logs the user out
+  /transactions:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/postTransactionsRequest'
+        required: true
+      tags:
+        - transactions
+      responses:
+        '201':
+          description: Succesfully creates a transaction
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                accountFromNotFound:
+                  value:
+                    error: Account not found
+                accountToNotFound:
+                  value:
+                    error: Invalid accountTo
+                invalidAmount:
+                  value:
+                    error: Invalid amount
+                insufficientFunds:
+                  value:
+                    error: Insufficient funds
+                invalidUserAccount:
+                  value:
+                    error: Forbidden
+          description: Returns the errors specified
+      security:
+        -
+          Bearer: []
 components:
   schemas:
     postUsersRequest:
@@ -224,10 +277,36 @@ components:
             user:
               type: string
       example:
+        name: Testija
+        username: test123
         account:
-          account_number: EE9084674985887495
-          balance: '50'
-          user: 5f71c68199d0ee13b836adc5
+          -
+            account_number: 65b238383569286925
+            balance: 9600
+            currency: EUR
+    postTransactionsRequest:
+      title: Root Type for postTransactionsRequest
+      description: ''
+      type: object
+      properties:
+        accountFrom:
+          description: Account number of the user sending funds
+          type: string
+        accountTo:
+          description: Account number of the user receiving funds
+          type: string
+        amount:
+          format: int32
+          description: The amount (funds)
+          type: integer
+        explanation:
+          description: The description of the transaction
+          type: string
+      example:
+        accountFrom: 65b238383569286925
+        accountTo: f6b952926464422664
+        amount: 100
+        explanation: test
   securitySchemes:
     Bearer:
       scheme: bearer

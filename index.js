@@ -1,9 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const {RequestHeadersHaveCorrectContentType, RequestBodyIsValidJson} = require('./middlewares');
 const swaggerUi = require('swagger-ui-express');
 const yaml = require('yamljs');
 const swaggerDocument = yaml.load('./docs/api.yaml');
+const { processTransactions, RequestHeadersHaveCorrectContentType, RequestBodyIsValidJson } = require('./middlewares')
 
 // Start Express
 const app = express();
@@ -35,10 +35,7 @@ mongoose.connect(process.env.DB_CONNECTION,
     () => console.log('connected to DB!')
 );
 
-// Routes
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
+processTransactions();
 
 // Port listen
 app.listen(process.env.PORT);

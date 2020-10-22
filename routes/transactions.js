@@ -1,85 +1,88 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/User');
-const Account = require('../models/Account');
-const Sessions = require('../models/Session');
-const Transactions = require('../models/Transaction');
-const {validateToken} = require('../middlewares');
+const router = require('express').Router();
+const bankModel = require('../models/Bank');
+const accountModel = require('../models/Account');
+const { verifyToken, refreshBanksFromCentralBank } = require('../middlewares');
+const fetch = require('node-fetch');
+const transactionModel = require('../models/Transaction');
+const userModel = require('../models/User');
 
-// Transaction logic
-router.put('/', validateToken, async (req, res, next) => {
-    try {
-        // Get a specific users session token
-        const sessionId = req.headers.authorization.split(' ')[1]
-        // Find a session with the provided Id
-        const session = await Sessions.findOne({ _id: sessionId });
+require('dotenv').config();
 
-        const account = await Account.findOne({user: session.userId}).select({ "account_number": 1, "balance": 1, "currency": 1, "user": 1 });
+router.post('/', verifyToken, async(req, res, next) => {
+    let banks = [],
+        statusDetail
 
-        const { account_to, amount } = req.body;
-        const accountTo = await Account.findOne({ account_number: account_to });
-        const accountFrom = await Account.findOne({ account_number: account.account_number });
+    // Get account data from DB
+    const accountFromObject = await accountModel.findOne({ account_number: req.body.accountFrom })
 
-        if (!accountTo) return res.status(400).json({
-            error: "The provided account number was not found or is not associated with any bank account"
-        });
-
-        if (typeof amount === 'string' || amount instanceof String) return res.status(400).json({ error: "Insert an amount as a number" });
-        if (account_to == account.account_number) return res.status(400).json({ error: "Unable to send funds to your own account" });
-        if (amount > accountFrom.balance) return res.status(400).json({ error: "Insufficient funds" });
-
-        // Transaction logic
-        // Sender
-        Account.findOneAndUpdate({ account_number: accountFrom.account_number }, { balance: accountFrom.balance - amount}, function (err, response) {
-            if(err) res.status(400).json({ error: "Something went wrong" });
-            res.status(200).json({ message: "Transaction successful. Your account balance now is: " + (accountFrom.balance - amount)});
-        });
-
-        // Receiver
-        Account.findOneAndUpdate({ account_number: accountTo.account_number }, { balance: accountTo.balance + amount}, function (err, response) {
-            if(err) res.status(400).json({ error: "Something went wrong" });
-            console.log("Transaction from: " + accountFrom.account_number);
-        });
-
-        const newTransactions = new Transactions({ accountTo: accountTo.user._id, accountFrom: accountFrom.user._id, amount });
-        console.log("Transaction to: " + accountTo.account_number)
-        await newTransactions.save();
+    // Check if that account exists
+    if (!accountFromObject) {
+        return res.status(404).json({ error: 'Account not found' })
     }
 
-    catch (e) {
-        next(e);
+    // Check if that accountFrom belongs to the user
+    if (accountFromObject.user.toString() !== req.userId.toString()) {
+        return res.status(403).json({ error: 'Forbidden' })
     }
-});
 
-// Transaction history
-router.get('/', validateToken, async (req, res, next) => {
-    try {
+    // Check for sufficient funds
+    if (req.body.amount > accountFromObject.balance) {
+        return res.status(402).json({ error: 'Insufficient funds' })
+    }
 
-        // Get a specific users session token
-        const sessionId = req.headers.authorization.split(' ')[1]
-        // Find a session with the provided Id
-        const session = await Sessions.findOne({ _id: sessionId });
+    // Check for invalid amounts
+    if (!req.body.amount || req.body.amount <= 0) {
+        return res.status(400).json({ error: 'Invalid amount' })
+    }
 
-        // const accountFromId = await Account.findOne({user: session.userId});
-        // const accountToId = await Account.findOne({user: session.userId});
+    if (!req.body.accountTo) {
+        return res.status(400).json({ error: 'Invalid accountTo' })
+    }
 
-        const userTransaction = await Transactions.find({ accountFrom: session.userId }).select({ "accountTo": 1, "accountFrom": 1, "amount": 1, "_id": 0 });
-        const receiveTransaction = await Transactions.find({ accountTo: session.userId }).select({ "accountTo": 1, "accountFrom": 1, "amount": 1, "_id": 0 });
+    const bankToPrefix = req.body.accountTo.slice(0, 3)
+    let bankTo = await bankModel.findOne({ bankPrefix: bankToPrefix })
 
-        if (!userTransaction && !receiveTransaction) {
-            res.status(200).json({ message: "Teil pole ühtegi ülekannet" });
+    // Check destination bank
+    if (!bankTo) {
+
+        // Refresh banks from central bank
+        const result = await refreshBanksFromCentralBank();
+
+        // Check if there was an error
+        if (typeof result.error !== 'undefined') {
+
+            // Log the error to transaction
+            console.log('There was an error communicating with central bank:')
+            console.log(result.error)
+            statusDetail = result.error
+        } else {
+
+            // Try getting the details of the destination bank again
+            bankTo = await bankModel.findOne({ bankPrefix: bankToPrefix })
+
+            // Check for destination bank once more
+            if (!bankTo) {
+                return res.status(400).json({ error: 'Invalid accountTo' })
+            }
         }
-
-        if (receiveTransaction) {
-            res.status(200).json({ transaction_history: receiveTransaction });
-        }
-
-        res.status(200).json({ transaction_history: userTransaction });
-
-    } catch (e) {
-        
+    } else {
+        console.log('Destination bank was found in cache');
     }
-});
 
+    // Make new transaction
+    console.log('Creating transaction...')
+    const transaction = transactionModel.create({
+        userId: req.userId,
+        amount: req.body.amount,
+        currency: accountFromObject.currency,
+        accountFrom: req.body.accountFrom,
+        accountTo: req.body.accountTo,
+        explanation: req.body.explanation,
+        statusDetail,
+        senderName: (await userModel.findOne({ _id: req.userId })).name
+    })
+
+    return res.status(201).json()
+})
 
 module.exports = router;
