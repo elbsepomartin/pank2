@@ -191,6 +191,73 @@ paths:
       security:
         -
           Bearer: []
+  /transactions/jwks:
+    get:
+      tags:
+        - transactions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTransactionsJWKS'
+              examples:
+                keys:
+                  value:
+                    keys:
+                      -
+                        kty: RSA
+                        kid: h_s_zbvPAS1WB-ref6FF1_TIHANcpjPhV_xEk9WR6X4
+                        'n': >-
+                          jdcp_0ewRa-dKQuqzSQD6nNsP8G-bfHcgl7fBshGCgznFYmGTiV2OuRQ1yIogdlfSBiQrol1P-IlfN1m5NKsR3iLw-PDOKFzoLf1fTQpuEZUsm5Ip-LpYgjCjjw8oOP7ZFqlkuR3XMj1rZYKiyhoRITxUZlz0v1LO1Wa736lO1E
+                        e: AQAB
+          description: Responds with a JWKS key
+  /transactions/b2b:
+    post:
+      tags:
+        - transactions
+      responses:
+        '200':
+          description: Succesfully received transaction
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                parsingJwtFailed:
+                  value:
+                    error: 'Parsing JWT payload failed'
+                verifyAccountTo:
+                  value:
+                    error: Account not found
+                bankNotFound:
+                  value:
+                    error: >-
+                      The account sending the funds does not belong to a bank registered
+                      in Central Bank
+                cannotVerifyJwksSignature:
+                  value:
+                    error: >-
+                      Cannot verify your signature: The jwksUrl of your bank is
+                      invalid
+                invalidSignature:
+                  value:
+                    error: Invalid signature
+          description: Returns the errors specified
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                centralBankError:
+                  value:
+                    error: Central Bank error
+                missingJwksUrl:
+                  value:
+                    error: 'Cannot verify your signature: The jwksUrl of your bank is missing'
+          description: Returns the errors specified
 components:
   schemas:
     postUsersRequest:
@@ -307,8 +374,33 @@ components:
         accountTo: f6b952926464422664
         amount: 100
         explanation: test
+    getTransactionsJWKS:
+      title: Root Type for getTransactionsJWKS
+      description: ''
+      type: object
+      properties:
+        keys:
+          description: key parameters provided by JWKS
+          type: array
+          items:
+            type: object
+            properties:
+              kty:
+                type: string
+              kid:
+                type: string
+              'n':
+                type: string
+              e:
+                type: string
+      example:
+        keys:
+          -
+            kty: some kty here
+            kid: some kid here
+            'n': some n here
+            e: some e here
   securitySchemes:
     Bearer:
       scheme: bearer
       type: http
-

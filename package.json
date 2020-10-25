@@ -20,6 +20,7 @@
   "homepage": "https://github.com/elbsepomartin/pank2#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "exchange-rates-api": "^1.0.2",
     "express": "^4.17.1",
     "mongoose": "^5.10.7",
     "node-fetch": "^2.6.1",
@@ -29,7 +30,7 @@
   },
   "devDependencies": {
     "abort-controller": "^3.0.0",
+    "axios": "^0.21.0",
     "yamljs": "^0.3.0"
   }
 }
-
