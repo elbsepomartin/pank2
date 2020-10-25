@@ -12,6 +12,35 @@ const fs = require('fs');
 
 require('dotenv').config();
 
+router.get('/', verifyToken, async(req, res) => {
+    try {
+
+        // Get a specific users session token
+        const sessionId = req.headers.authorization.split(' ')[1]
+
+        // Find a session with the provided Id
+        const session = await sessionModel.findOne({ _id: sessionId });
+
+        // Find the account associated with the user
+        const accountId = await accountModel.findOne({user: session.userId});
+
+        // Find all transactions
+        const sentTransaction = await transactionModel.find({ user: accountId.userId })
+
+        // If there are no transactions associated with the user
+        if (!sentTransaction) {
+            res.status(404).json({ error: "You have no logged transactions" });
+        } else {
+            // Displays transactions
+            console.log("Displaying transactions")
+            res.status(200).json({transactions: sentTransaction});
+        }
+
+    } catch (e) {
+        return res.status(500).json({error: "Failed getting transactions"})
+    }
+})
+
 router.post('/', verifyToken, async(req, res, next) => {
     let banks = [],
         statusDetail

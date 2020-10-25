@@ -154,6 +154,56 @@ paths:
           Bearer: []
       summary: Logs the user out
   /transactions:
+    get:
+      tags:
+        - transactions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTransactionsHistoryResponse'
+              examples:
+                transactionHistory:
+                  value:
+                    transactions:
+                      -
+                        createdAt: '2020-10-24T13:37:11.821Z'
+                        status: completed
+                        _id: 5f942e64bcc9ec2ff43a2b5b
+                        userId: 5f9165c7ab97d33e5026a76d
+                        amount: 10
+                        currency: EUR
+                        accountFrom: f6b764739703172167
+                        accountTo: 24d238383569286925
+                        explanation: joulu
+                        senderName: Andrus
+                        __v: 0
+                        statusDetail: ''
+          description: Responded with the transaction history
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                noTransactions:
+                  value:
+                    error: You have no logged transactions
+          description: Returns the error specified
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                failedGettingTransactions:
+                  value:
+                    error: Failed getting transactions
+          description: Server error
+      security:
+        -
+          Bearer: []
     post:
       requestBody:
         content:
@@ -200,7 +250,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getTransactionsJWKS'
+                $ref: '#/components/schemas/getTransactionsJwksResponse'
               examples:
                 keys:
                   value:
@@ -227,7 +277,7 @@ paths:
               examples:
                 parsingJwtFailed:
                   value:
-                    error: 'Parsing JWT payload failed'
+                    error: Parsing JWT payload failed
                 verifyAccountTo:
                   value:
                     error: Account not found
@@ -238,9 +288,7 @@ paths:
                       in Central Bank
                 cannotVerifyJwksSignature:
                   value:
-                    error: >-
-                      Cannot verify your signature: The jwksUrl of your bank is
-                      invalid
+                    error: 'Cannot verify your signature: The jwksUrl of your bank is invalid'
                 invalidSignature:
                   value:
                     error: Invalid signature
@@ -374,7 +422,61 @@ components:
         accountTo: f6b952926464422664
         amount: 100
         explanation: test
-    getTransactionsJWKS:
+    getTransactionsHistoryResponse:
+      title: Root Type for getTransactionsHistory
+      description: Get a users transaction history
+      type: object
+      properties:
+        createdAt:
+          description: When the transaction was created
+          type: string
+        status:
+          description: The status of the transaction
+          type: string
+        _id:
+          description: Transaction ID
+          type: string
+        userId:
+          description: The id of the user sending the money (accountFrom)
+          type: string
+        amount:
+          format: int32
+          description: The amount being sent in cents
+          type: integer
+        currency:
+          description: The currency of the sender
+          type: string
+        accountFrom:
+          description: The account where the transaction is from
+          type: string
+        accountTo:
+          description: The account where the transaction is to
+          type: string
+        explanation:
+          description: The explanation of the transaction
+          type: string
+        senderName:
+          description: The name of the sender (accountFrom)
+          type: string
+        __v:
+          format: int32
+          type: integer
+        statusDetail:
+          type: string
+      example:
+        createdAt: date
+        status: the status
+        _id: transaction id
+        userId: user sending money
+        amount: 0
+        currency: the currency
+        accountFrom: transaction from
+        accountTo: transaction to
+        explanation: explanation here
+        senderName: sender's name
+        __v: 0
+        statusDetail: ''
+    getTransactionsJwksResponse:
       title: Root Type for getTransactionsJWKS
       description: ''
       type: object
