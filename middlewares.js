@@ -224,9 +224,9 @@ exports.processTransactions = async() => {
         transaction.receiverName = serverResponseAsJson.receiverName
 
         // Deduct accountFrom
-        const account = await accountModel.findOne({ account_number: transaction.accountFrom })
-        account.balance = account.balance - transaction.amount
-        account.save();
+        const accountFromBalance = await accountModel.findOne({ account_number: transaction.accountFrom })
+        accountFromBalance.balance = accountFromBalance.balance - transaction.amount
+        accountFromBalance.save();
 
         // Update transaction status to completed
         console.log('loop: Transaction ' + transaction.id + ' completed')
