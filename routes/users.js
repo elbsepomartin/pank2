@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
         const savedUser = await user.save();
         const savedAccount = await account.save();
         res.header('location', '/users/' + savedUser._id);
-        res.status(201);
+        res.status(201).json({});
     } catch (err) {
         res.status(400).json({error: err.message} );
     }

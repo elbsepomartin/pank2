@@ -110,6 +110,12 @@ paths:
           description: Returns the errors specified
       summary: Logs the user in
     delete:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bodyType'
+        required: true
       tags:
         - sessions
       responses:
@@ -154,6 +160,56 @@ paths:
           Bearer: []
       summary: Logs the user out
   /transactions:
+    get:
+      tags:
+        - transactions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTransactionsHistoryResponse'
+              examples:
+                transactionHistory:
+                  value:
+                    transactions:
+                      -
+                        createdAt: '2020-10-24T13:37:11.821Z'
+                        status: completed
+                        _id: 5f942e64bcc9ec2ff43a2b5b
+                        userId: 5f9165c7ab97d33e5026a76d
+                        amount: 10
+                        currency: EUR
+                        accountFrom: f6b764739703172167
+                        accountTo: 24d238383569286925
+                        explanation: joulu
+                        senderName: Andrus
+                        __v: 0
+                        statusDetail: ''
+          description: Responded with the transaction history
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                noTransactions:
+                  value:
+                    error: You have no logged transactions
+          description: Returns the error specified
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                failedGettingTransactions:
+                  value:
+                    error: Failed getting transactions
+          description: Server error
+      security:
+        -
+          Bearer: []
     post:
       requestBody:
         content:
@@ -191,6 +247,71 @@ paths:
       security:
         -
           Bearer: []
+  /transactions/jwks:
+    get:
+      tags:
+        - transactions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTransactionsJwksResponse'
+              examples:
+                keys:
+                  value:
+                    keys:
+                      -
+                        kty: RSA
+                        kid: h_s_zbvPAS1WB-ref6FF1_TIHANcpjPhV_xEk9WR6X4
+                        'n': >-
+                          jdcp_0ewRa-dKQuqzSQD6nNsP8G-bfHcgl7fBshGCgznFYmGTiV2OuRQ1yIogdlfSBiQrol1P-IlfN1m5NKsR3iLw-PDOKFzoLf1fTQpuEZUsm5Ip-LpYgjCjjw8oOP7ZFqlkuR3XMj1rZYKiyhoRITxUZlz0v1LO1Wa736lO1E
+                        e: AQAB
+          description: Responds with a JWKS key
+  /transactions/b2b:
+    post:
+      tags:
+        - transactions
+      responses:
+        '200':
+          description: Succesfully received transaction
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                parsingJwtFailed:
+                  value:
+                    error: Parsing JWT payload failed
+                verifyAccountTo:
+                  value:
+                    error: Account not found
+                bankNotFound:
+                  value:
+                    error: >-
+                      The account sending the funds does not belong to a bank registered
+                      in Central Bank
+                cannotVerifyJwksSignature:
+                  value:
+                    error: 'Cannot verify your signature: The jwksUrl of your bank is invalid'
+                invalidSignature:
+                  value:
+                    error: Invalid signature
+          description: Returns the errors specified
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponse'
+              examples:
+                centralBankError:
+                  value:
+                    error: Central Bank error
+                missingJwksUrl:
+                  value:
+                    error: 'Cannot verify your signature: The jwksUrl of your bank is missing'
+          description: Returns the errors specified
 components:
   schemas:
     postUsersRequest:
@@ -307,8 +428,92 @@ components:
         accountTo: f6b952926464422664
         amount: 100
         explanation: test
+    getTransactionsHistoryResponse:
+      title: Root Type for getTransactionsHistory
+      description: Get a users transaction history
+      type: object
+      properties:
+        createdAt:
+          description: When the transaction was created
+          type: string
+        status:
+          description: The status of the transaction
+          type: string
+        _id:
+          description: Transaction ID
+          type: string
+        userId:
+          description: The id of the user sending the money (accountFrom)
+          type: string
+        amount:
+          format: int32
+          description: The amount being sent in cents
+          type: integer
+        currency:
+          description: The currency of the sender
+          type: string
+        accountFrom:
+          description: The account where the transaction is from
+          type: string
+        accountTo:
+          description: The account where the transaction is to
+          type: string
+        explanation:
+          description: The explanation of the transaction
+          type: string
+        senderName:
+          description: The name of the sender (accountFrom)
+          type: string
+        __v:
+          format: int32
+          type: integer
+        statusDetail:
+          type: string
+      example:
+        createdAt: date
+        status: the status
+        _id: transaction id
+        userId: user sending money
+        amount: 0
+        currency: the currency
+        accountFrom: transaction from
+        accountTo: transaction to
+        explanation: explanation here
+        senderName: sender's name
+        __v: 0
+        statusDetail: ''
+    getTransactionsJwksResponse:
+      title: Root Type for getTransactionsJWKS
+      description: ''
+      type: object
+      properties:
+        keys:
+          description: key parameters provided by JWKS
+          type: array
+          items:
+            type: object
+            properties:
+              kty:
+                type: string
+              kid:
+                type: string
+              'n':
+                type: string
+              e:
+                type: string
+      example:
+        keys:
+          -
+            kty: some kty here
+            kid: some kid here
+            'n': some n here
+            e: some e here
+    bodyType:
+      title: Root Type for bodyType
+      description: ''
+      type: object
+      example: {}
   securitySchemes:
     Bearer:
       scheme: bearer
       type: http
-
